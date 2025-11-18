@@ -36,23 +36,32 @@ export default function AssessmentDashboard() {
         const parsed = JSON.parse(stored);
         setAssessments(parsed);
       } else {
-        setAssessments([
-          {
-            id: '345968',
-            caseId: '12345',
-            type: 'F.A.R.E',
-            status: 'Completed',
-            createdOn: '08/10/2025, 09:30:15 AM'
-          },
-          {
-            id: '789614',
-            caseId: '23456',
-            type: 'CANS',
-            status: 'In-progress',
-            createdOn: '11/09/2025, 02:45:22 PM'
-          }
-        ]);
-      }
+  setAssessments([
+    {
+      id: '345968',
+      caseId: '12345',
+      type: 'F.A.R.E',
+      status: 'Completed',
+      createdOn: '08/10/2025, 09:30:15 AM'
+    },
+    {
+      id: '789614',
+      caseId: '23456',
+      type: 'CANS',
+      status: 'In-progress',
+      createdOn: '11/09/2025, 02:45:22 PM'
+    },
+    // Add 10 more demo assessments here for testing pagination
+    ...Array.from({ length: 10 }, (_, i) => ({
+      id: `DEMO-${100000 + i}`,
+      caseId: `CASE-${5000 + i}`,
+      type: ['CANS', 'F.A.R.E', 'Residential'][i % 3],
+      status: ['Completed', 'In-progress', 'Draft'][i % 3],
+      createdOn: new Date(2025, 10, i + 1).toLocaleString('en-US')
+    }))
+  ]);
+}
+      
     } catch (error) {
       console.error('Error loading assessments:', error);
     }

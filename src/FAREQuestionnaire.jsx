@@ -795,15 +795,17 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
   const [isSaving, setIsSaving] = useState(false);
   const [showMissedQuestionsModal, setShowMissedQuestionsModal] = useState(false);
   const [missedQuestions, setMissedQuestions] = useState([]);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   useEffect(() => {
     console.log('=== FARE DRAFT DEBUG ===');
     console.log('1. Full draftData:', draftData);
     console.log('2. draftData.overview:', draftData?.overview);
     console.log('3. draftData.overview.caseId:', draftData?.overview?.caseId);
+    console.log('4. draftData.status:', draftData?.status);
     
     if (draftData) {
-      console.log('4. Setting caseId to:', draftData.overview?.caseId);
+      console.log('5. Setting caseId to:', draftData.overview?.caseId);
       setCaseId(draftData.overview?.caseId || '');
       setChildName(draftData.overview?.childName || '');
       setDob(draftData.overview?.dob || '');
@@ -811,8 +813,14 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
       setCaseWorkerName(draftData.overview?.caseWorkerName || '');
       setDateCompleted(draftData.overview?.dateCompleted || '');
       
+      // Check if the assessment is completed
+      if (draftData.status === 'Completed' || draftData.status === 'completed') {
+        setIsCompleted(true);
+        console.log('✅ Assessment is COMPLETED - Setting read-only mode');
+      }
+      
       if (draftData.answers) {
-        console.log('5. Loading answers:', draftData.answers);
+        console.log('6. Loading answers:', draftData.answers);
         setFormData(draftData.answers);
       }
     } else {
@@ -821,6 +829,11 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
   }, [draftData]);
 
   const handleOptionChange = (questionId, value) => {
+    if (isCompleted) {
+      console.log('❌ Cannot edit completed assessment');
+      return;
+    }
+
     const currentQuestionIndex = QUESTIONS.findIndex(q => q.id === questionId);
     
     // *** VALIDATION FIRST - Check if previous questions are answered ***
@@ -1045,6 +1058,8 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
   };
 
   const handleCheckboxChange = (questionId, optionValue, field) => {
+    if (isCompleted) return;
+    
     setFormData(prev => ({
       ...prev,
       [questionId]: {
@@ -1062,6 +1077,8 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
   };
 
   const handleTextChange = (questionId, optionValue, field, value) => {
+    if (isCompleted) return;
+    
     setFormData(prev => ({
       ...prev,
       [questionId]: {
@@ -1225,6 +1242,11 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
   };
 
   const handleSaveDraft = async () => {
+    if (isCompleted) {
+      alert('This assessment is already completed and cannot be modified.');
+      return;
+    }
+
     setIsSaving(true);
     try {
       const saveData = {
@@ -1276,6 +1298,11 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
   };
 
   const handleFinalize = async () => {
+    if (isCompleted) {
+      alert('This assessment is already completed and cannot be modified.');
+      return;
+    }
+
     if (!formData['clinical_exception']?.responses || formData['clinical_exception'].responses.length === 0) {
       alert('Please answer Question 1 before submitting.');
       scrollToQuestion('clinical_exception');
@@ -1404,6 +1431,32 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
   return (
     <div className="fare-container">
       <div className="fare-wrapper">
+        {/* Read-Only Banner */}
+        {isCompleted && (
+          <div style={{
+            backgroundColor: '#EFF6FF',
+            border: '2px solid #3B82F6',
+            borderRadius: '8px',
+            padding: '16px 20px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.48 0 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" fill="#3B82F6"/>
+            </svg>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '15px', fontWeight: '600', color: '#1E40AF', marginBottom: '4px' }}>
+                Assessment Completed - Read-Only Mode
+              </div>
+              <div style={{ fontSize: '13px', color: '#1E40AF' }}>
+                This assessment has been finalized and cannot be edited. You can view all responses below.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="fare-header">
           <div className="fare-header-top">
@@ -1432,15 +1485,17 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
                   <input
                     type="text"
                     value={caseId}
-                    onChange={(e) => setCaseId(e.target.value)}
+                    onChange={(e) => !isCompleted && setCaseId(e.target.value)}
+                    disabled={isCompleted}
                     style={{
                       padding: '4px 8px',
                       border: '1px solid #d1d5db',
                       borderRadius: '4px',
                       fontSize: '13px',
                       color: '#111827',
-                      backgroundColor: 'white',
+                      backgroundColor: isCompleted ? '#f3f4f6' : 'white',
                       flex: 1,
+                      cursor: isCompleted ? 'not-allowed' : 'text'
                     }}
                     placeholder="Enter Case ID..."
                   />
@@ -1455,15 +1510,17 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
                   <input
                     type="text"
                     value={childName}
-                    onChange={(e) => setChildName(e.target.value)}
+                    onChange={(e) => !isCompleted && setChildName(e.target.value)}
+                    disabled={isCompleted}
                     style={{
                       padding: '4px 8px',
                       border: '1px solid #d1d5db',
                       borderRadius: '4px',
                       fontSize: '13px',
                       color: '#111827',
-                      backgroundColor: 'white',
+                      backgroundColor: isCompleted ? '#f3f4f6' : 'white',
                       flex: 1,
+                      cursor: isCompleted ? 'not-allowed' : 'text'
                     }}
                     placeholder="Enter Child Name..."
                   />
@@ -1478,15 +1535,17 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
                   <input
                     type="date"
                     value={dob}
-                    onChange={(e) => setDob(e.target.value)}
+                    onChange={(e) => !isCompleted && setDob(e.target.value)}
+                    disabled={isCompleted}
                     style={{
                       padding: '4px 8px',
                       border: '1px solid #d1d5db',
                       borderRadius: '4px',
                       fontSize: '13px',
                       color: '#111827',
-                      backgroundColor: 'white',
+                      backgroundColor: isCompleted ? '#f3f4f6' : 'white',
                       flex: 1,
+                      cursor: isCompleted ? 'not-allowed' : 'text'
                     }}
                   />
                 </div>
@@ -1502,15 +1561,17 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
                   <input
                     type="text"
                     value={caregiverName}
-                    onChange={(e) => setCaregiverName(e.target.value)}
+                    onChange={(e) => !isCompleted && setCaregiverName(e.target.value)}
+                    disabled={isCompleted}
                     style={{
                       padding: '4px 8px',
                       border: '1px solid #d1d5db',
                       borderRadius: '4px',
                       fontSize: '13px',
                       color: '#111827',
-                      backgroundColor: 'white',
+                      backgroundColor: isCompleted ? '#f3f4f6' : 'white',
                       flex: 1,
+                      cursor: isCompleted ? 'not-allowed' : 'text'
                     }}
                     placeholder="Enter Caregiver Name..."
                   />
@@ -1525,15 +1586,17 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
                   <input
                     type="text"
                     value={caseWorkerName}
-                    onChange={(e) => setCaseWorkerName(e.target.value)}
+                    onChange={(e) => !isCompleted && setCaseWorkerName(e.target.value)}
+                    disabled={isCompleted}
                     style={{
                       padding: '4px 8px',
                       border: '1px solid #d1d5db',
                       borderRadius: '4px',
                       fontSize: '13px',
                       color: '#111827',
-                      backgroundColor: 'white',
+                      backgroundColor: isCompleted ? '#f3f4f6' : 'white',
                       flex: 1,
+                      cursor: isCompleted ? 'not-allowed' : 'text'
                     }}
                     placeholder="Enter Case Worker Name..."
                   />
@@ -1548,15 +1611,17 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
                   <input
                     type="date"
                     value={dateCompleted}
-                    onChange={(e) => setDateCompleted(e.target.value)}
+                    onChange={(e) => !isCompleted && setDateCompleted(e.target.value)}
+                    disabled={isCompleted}
                     style={{
                       padding: '4px 8px',
                       border: '1px solid #d1d5db',
                       borderRadius: '4px',
                       fontSize: '13px',
                       color: '#111827',
-                      backgroundColor: 'white',
+                      backgroundColor: isCompleted ? '#f3f4f6' : 'white',
                       flex: 1,
+                      cursor: isCompleted ? 'not-allowed' : 'text'
                     }}
                   />
                 </div>
@@ -1591,7 +1656,7 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
           )}
         </div>
 
-        {/* Guide Information - KEEPING YOUR ORIGINAL GUIDE SECTION */}
+        {/* Guide Information */}
         <div className="guide-section">
           <h2 className="guide-title">GUIDE TO COMPLETING FOSTER CARE RATING AT EXIT INTERVIEW (F.A.R.E)</h2>
           
@@ -1832,7 +1897,7 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
           </div>
         </div>
 
-   {QUESTIONS.map((question, questionIndex) => {
+{QUESTIONS.map((question, questionIndex) => {
   const hasResponse = formData[question.id]?.responses?.length > 0;
   
   // *** FIX: Find which exact question ended the interview ***
@@ -1850,12 +1915,12 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
     }
   }
   
-  // *** Only the question that triggered the end stays editable ***
-  const shouldDisable = interviewEnded && question.id !== triggerQuestionId;
+  // *** Disable if completed OR if interview ended (except trigger question) ***
+  const shouldDisable = isCompleted || (interviewEnded && question.id !== triggerQuestionId);
   
   let isLocked = false;
   let firstUnansweredSection = null;
-  if (!interviewEnded && questionIndex > 0) {
+  if (!interviewEnded && questionIndex > 0 && !isCompleted) {
     for (let i = 0; i < questionIndex; i++) {
       const prevQuestion = QUESTIONS[i];
       const prevQuestionData = formData[prevQuestion.id];
@@ -1882,7 +1947,7 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
         backgroundColor: isLocked ? '#FFFBEB' : undefined
       }}
     >
-      {shouldDisable && (
+      {shouldDisable && !isCompleted && (
         <div style={{
           position: 'absolute',
           top: 0,
@@ -1921,7 +1986,7 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
                             <div className="option-label-wrapper">
                               <label className="option-label" onClick={(e) => {
   e.preventDefault();
-  if (!shouldDisable) {
+  if (!shouldDisable && !isCompleted) {
     handleOptionChange(question.id, option.value);
   }
 }}>
@@ -1931,9 +1996,9 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
     checked={isSelected}
     readOnly
     className="option-input"
-    disabled={shouldDisable}
+    disabled={shouldDisable || isCompleted}
     style={{
-      cursor: shouldDisable ? 'not-allowed' : 'pointer',
+      cursor: (shouldDisable || isCompleted) ? 'not-allowed' : 'pointer',
       pointerEvents: 'none'
     }}
   />
@@ -1982,13 +2047,13 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
                                     className="textarea-input"
                                     placeholder="Youth's comments..."
                                     required={optionData.requireYouthComment}
-                                    disabled={shouldDisable}
+                                    disabled={shouldDisable || isCompleted}
                                     style={{
-                                      backgroundColor: shouldDisable ? '#f3f4f6' : 'white',
-                                      cursor: shouldDisable ? 'not-allowed' : 'text'
+                                      backgroundColor: (shouldDisable || isCompleted) ? '#f3f4f6' : 'white',
+                                      cursor: (shouldDisable || isCompleted) ? 'not-allowed' : 'text'
                                     }}
                                   />
-                                  {optionData.requireYouthComment && !optionData.youthComment?.trim() && !shouldDisable && (
+                                  {optionData.requireYouthComment && !optionData.youthComment?.trim() && !shouldDisable && !isCompleted && (
                                     <span className="field-required-note">This field is required before proceeding</span>
                                   )}
                                 </div>
@@ -2008,13 +2073,13 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
                                     className="textarea-input"
                                     placeholder="Interviewer's observations..."
                                     required={optionData.requireInterviewerComment}
-                                    disabled={shouldDisable}
+                                    disabled={shouldDisable || isCompleted}
                                     style={{
-                                      backgroundColor: shouldDisable ? '#f3f4f6' : 'white',
-                                      cursor: shouldDisable ? 'not-allowed' : 'text'
+                                      backgroundColor: (shouldDisable || isCompleted) ? '#f3f4f6' : 'white',
+                                      cursor: (shouldDisable || isCompleted) ? 'not-allowed' : 'text'
                                     }}
                                   />
-                                  {optionData.requireInterviewerComment && !optionData.interviewerComment?.trim() && !shouldDisable && (
+                                  {optionData.requireInterviewerComment && !optionData.interviewerComment?.trim() && !shouldDisable && !isCompleted && (
                                     <span className="field-required-note">This field is required before proceeding</span>
                                   )}
                                 </div>
@@ -2036,31 +2101,35 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
           <button 
             className="btn btn-cancel" 
             onClick={() => {
-              if (unsavedChanges) {
+              if (unsavedChanges && !isCompleted) {
                 setShowUnsavedWarning(true);
               } else {
                 window.location.reload();
               }
             }}
           >
-            Cancel
+            {isCompleted ? 'Close' : 'Cancel'}
           </button>
-          <button 
-            onClick={handleSaveDraft} 
-            className="btn btn-draft"
-            disabled={isSaving}
-          >
-            <Save size={20} />
-            {isSaving ? 'Saving...' : 'Save As Draft'}
-          </button>
-          <button 
-            onClick={handleFinalize} 
-            className="btn btn-save"
-            disabled={isSaving}
-          >
-            <Save size={20} />
-            {isSaving ? 'Submitting...' : 'Submit'}
-          </button>
+          {!isCompleted && (
+            <>
+              <button 
+                onClick={handleSaveDraft} 
+                className="btn btn-draft"
+                disabled={isSaving}
+              >
+                <Save size={20} />
+                {isSaving ? 'Saving...' : 'Save As Draft'}
+              </button>
+              <button 
+                onClick={handleFinalize} 
+                className="btn btn-save"
+                disabled={isSaving}
+              >
+                <Save size={20} />
+                {isSaving ? 'Submitting...' : 'Submit'}
+              </button>
+            </>
+          )}
         </div>
 
         {/* Validation Modal */}

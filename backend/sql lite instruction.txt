@@ -1,0 +1,100 @@
+if you already have the sql lite then don't install in your system but if not install through this link 
+https://sqlitebrowser.org/dl/
+
+and after all this things done then open the application which name is DB browser (Sql Lite)
+
+and in the go in the backend via command and execute this line in backend folder 
+npm install express cors sqlite3 sqlite
+
+
+and this is the server.js code where it was calling the data base via a api(routes) for get and insert 
+
+app.get("/", (req, res) => {
+  res.send("🚀 SQLite Server is running and connected!");
+});
+
+
+and this is the server.js code 
+
+
+import express from "express";
+import cors from "cors";
+import sqlite3 from "sqlite3";
+import { open } from "sqlite";
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// ✅ Initialize and connect to SQLite database
+let db;
+const initializeDB = async () => {
+  db = await open({
+    filename: "./basic_info.db", // Database file
+    driver: sqlite3.Database,
+  });
+
+  // ✅ Create table if not exists
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS basic_info (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      schemajson TEXT,
+      status TEXT,
+      createdat DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  console.log("✅ SQLite Database ready at ./basic_info.db");
+};
+
+// ✅ POST route to insert data
+app.post("/api/basic-info", async (req, res) => {
+  try {
+    const { status, ...schemajson } = req.body;
+    const jsonString = JSON.stringify(schemajson);
+
+    await db.run(
+      `INSERT INTO basic_info (schemajson, status) VALUES (?, ?)`,
+      [jsonString, status]
+    );
+
+    res.status(201).json({ message: "✅ Data saved successfully!" });
+  } catch (error) {
+    console.error("❌ Error inserting data:", error);
+    res.status(500).json({ message: "Error saving data" });
+  }
+});
+
+// ✅ GET route to fetch all data
+app.get("/api/basic-info", async (req, res) => {
+  try {
+    const rows = await db.all(`SELECT * FROM basic_info ORDER BY id DESC`);
+    const formattedRows = rows.map(row => ({
+      ...row,
+      schemajson: JSON.parse(row.schemajson),
+    }));
+    res.json(formattedRows);
+  } catch (error) {
+    console.error("❌ Error fetching data:", error);
+    res.status(500).json({ message: "Error retrieving data" });
+  }
+});
+
+// ✅ Root endpoint
+app.get("/", (req, res) => {
+  res.send("🚀 SQLite Server is running and connected!");
+});
+
+// ✅ Start Server
+const PORT = 5000;
+initializeDB().then(() => {
+  app.listen(PORT, () =>
+    console.log(`🚀 Server running on http://localhost:${PORT}`)
+  );
+});
+
+
+
+
+
+

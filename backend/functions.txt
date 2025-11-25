@@ -1,0 +1,162 @@
+  function formatSchemaJSON(overview, answers) {
+  const assessmentSections = visibleSections.map((section) => {
+    // Filter questions that have a valid answer (selected by the user)
+    const answeredQuestions = (section.rows || [])
+      .map((row) => {
+        const a = answers[row.id] || {};
+        return {
+          question_id: row.id,
+          question_title: row.title,
+          score: a.score ?? null,
+          notes: a.notes || "",
+          unknown: a.unk || false,
+          not_applicable: a.na || false,
+        };
+      })
+      .filter(
+        (q) =>
+          q.score !== null ||
+          q.notes.trim() !== "" ||
+          q.unknown ||
+          q.not_applicable
+      ); // only include answered ones
+
+    // Include the section only if it has answered questions
+    return answeredQuestions.length > 0
+      ? {
+          section_id: section.id,
+          section_title: section.title,
+          questions: answeredQuestions,
+        }
+      : null;
+  }).filter(Boolean); // remove empty sections
+
+  return {
+    sections: {
+      case_details: {
+        case_id: overview.caseId || "",
+        case_name: overview.caseName || "",
+        date_of_assessment: overview.dateOfAssessment || "",
+        worker_name: overview.workerName || "",
+      },
+      member_details: {
+        person_id: overview.personId || "",
+        member_name: overview.memberName || "",
+        member_dob: overview.memberDob || "",
+        member_role: overview.memberRole || "",
+      },
+      assessment: assessmentSections,
+    },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+
+
+
+
+
+
+
+
+
+async function handleSaveDraft() {
+  const missingOverview = requiredOverviewFields.filter(
+    (k) => !formData[k] || String(formData[k]).trim() === ""
+  );
+
+  if (!anyAnswered) {
+    alert("Please answer at least one question before saving as draft.");
+    return;
+  }
+
+  setIsSaving(true);
+  try {
+    const formattedSchema = formatSchemaJSON(formData, answers);
+
+    // dynamically capture user timezone and offset
+    const now = new Date();
+    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const localISOTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString();
+
+    const payload = {
+      status: "draft",
+      schema_json: formattedSchema,
+      overview: formData,
+      answers,
+      timestamp: localISOTime,
+      timezone: userTimeZone,
+      serverDocId,
+    };
+
+    const res = await saveDraftPayload(payload);
+    if (!res.ok) {
+      alert(res.data?.message || "Save failed");
+      return;
+    }
+
+    if (res.data?.id) setServerDocId(res.data.id);
+    setIsDirty(false);
+    setLastSavedAt(localISOTime);
+    alert("✅ Saved as draft!");
+  } catch (err) {
+    console.error("Save draft error:", err);
+    alert("Error while saving draft: " + (err.message || String(err)));
+  } finally {
+    setIsSaving(false);
+  }
+}
+
+// Complete / Submit
+async function handleComplete() {
+  const missing = requiredOverviewFields.filter(
+    (k) => !formData[k] || String(formData[k]).trim() === ""
+  );
+  if (missing.length) {
+    alert("Please fill the required fields: " + missing.join(", "));
+    return;
+  }
+
+  if (missingDescriptions.size > 0) {
+    const titles = [...missingDescriptions].map(
+      (id) => rowTitlesById.get(id) || `Question ${id}`
+    );
+    alert("Please fill the required Describe field(s) for: " + titles.join(", "));
+    return;
+  }
+
+  setIsSaving(true);
+  try {
+    const formattedSchema = formatSchemaJSON(formData, answers);
+
+    const now = new Date();
+    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const localISOTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString();
+
+    const payload = {
+      status: "complete",
+      schema_json: formattedSchema,
+      overview: formData,
+      answers,
+      timestamp: localISOTime,
+      timezone: userTimeZone,
+      serverDocId,
+    };
+
+    const res = await saveDraftPayload(payload);
+    if (!res.ok) {
+      alert(res.data?.message || "Submit failed");
+      return;
+    }
+
+    if (res.data?.id) setServerDocId(res.data.id);
+    setIsDirty(false);
+    setLastSavedAt(localISOTime);
+    alert("✅ Form submitted successfully!");
+  } catch (err) {
+    console.error("Submit error:", err);
+    alert("Error while submitting: " + (err.message || String(err)));
+  } finally {
+    setIsSaving(false);
+  }
+}

@@ -1,0 +1,124 @@
+// THIS CODE IS FOR LOCAL TIME OF THE USERS 
+import express from "express";
+import cors from "cors";
+import fs from "fs";
+import path from "path";
+import { createObjectCsvWriter } from "csv-writer";
+
+// ====== Express Setup ======
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// ====== CSV File Path ======
+const dataDir = path.resolve("./data");
+const csvFilePath = path.join(dataDir, "basic_info.csv");
+
+// Ensure data directory exists
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir);
+  console.log("📁 Created data directory");
+}
+
+// ====== Helper: Get Local Timestamp Based on System Timezone ======
+const getTimestamp = () => {
+  const now = new Date();
+  // This uses the local timezone of the machine running the code
+  const formatted = now.toLocaleString("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+  return formatted;
+};
+
+// ====== Helper: Create CSV Writer ======
+const getCsvWriter = (append = true) => {
+  return createObjectCsvWriter({
+    path: csvFilePath,
+    header: [
+      { id: "id", title: "ID" },
+      { id: "status", title: "Status" },
+      { id: "timestamp", title: "Timestamp" },
+      { id: "schemajson", title: "SchemaJSON" },
+    ],
+    append,
+  });
+};
+
+// ====== POST: Save Data ======
+app.post("/api/basic-info", async (req, res) => {
+  try {
+    const { status, ...schemajson } = req.body;
+
+    // Format schema JSON (pretty-print)
+    const formattedSchemaJson = JSON.stringify(schemajson, null, 2);
+
+    // Use local system time
+    const timestamp = getTimestamp();
+
+    const data = {
+      id: Date.now().toString(),
+      status: status || "draft",
+      timestamp,
+      schemajson: formattedSchemaJson,
+    };
+
+    const fileExists = fs.existsSync(csvFilePath);
+    const csvWriter = getCsvWriter(fileExists);
+
+    await csvWriter.writeRecords([data]);
+    console.log(`✅ Data saved to CSV file: ${csvFilePath}`);
+    console.log(`🕒 Time recorded as ${timestamp}`);
+
+    res.status(201).json({
+      message: "✅ Data saved successfully to CSV!",
+      id: data.id,
+      timestamp: data.timestamp,
+    });
+  } catch (error) {
+    console.error("❌ Error saving data:", error);
+    res.status(500).json({ message: "Error saving data", error });
+  }
+});
+
+// ====== GET: Retrieve All Data ======
+app.get("/api/basic-info", async (req, res) => {
+  try {
+    if (!fs.existsSync(csvFilePath)) {
+      return res.status(200).json([]);
+    }
+
+    const csvData = fs.readFileSync(csvFilePath, "utf8");
+    const lines = csvData.trim().split("\n");
+    const headers = lines.shift().split(",");
+    const data = lines.map((line) => {
+      const values = line.split(",");
+      const row = {};
+      headers.forEach((h, i) => {
+        row[h] = values[i];
+      });
+      return row;
+    });
+
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("❌ Error retrieving data:", error);
+    res.status(500).json({ message: "Error retrieving data", error });
+  }
+});
+
+// ===== Root Route =====
+app.get("/", (req, res) => {
+  res.send("🚀 Backend connected successfully (CSV Mode)");
+});
+
+// ===== Start Server =====
+const PORT = 5000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT} (CSV Mode)`);
+});

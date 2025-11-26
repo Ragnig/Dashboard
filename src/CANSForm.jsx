@@ -124,6 +124,7 @@ export default function BasicInfoForm({ overview = demoOverview, sections = demo
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [serverDocId, setServerDocId] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isViewOnly, setIsViewOnly] = useState(false); // For completed forms opened from dashboard
   const [showReviewScreen, setShowReviewScreen] = useState(false);
   const [showWarningScreen, setShowWarningScreen] = useState(false);
   const [warningTriggered, setWarningTriggered] = useState(false);
@@ -143,6 +144,36 @@ export default function BasicInfoForm({ overview = demoOverview, sections = demo
   useEffect(() => {
     isDirtyRef.current = isDirty;
   }, [isDirty]);
+
+  // Load draft data when component mounts
+  useEffect(() => {
+    if (draftData) {
+      // Load overview data
+      if (draftData.overview) {
+        setFormData(prev => ({
+          ...prev,
+          ...draftData.overview
+        }));
+      }
+      
+      // Load answers
+      if (draftData.answers) {
+        setAnswers(draftData.answers);
+      }
+      
+      // Set server doc ID if available
+      if (draftData.id) {
+        setServerDocId(draftData.id);
+      }
+      
+      // If opening a completed assessment from dashboard, set as view-only (not submitted)
+      // This allows navigation but disables editing
+      if (draftData.status === 'Completed') {
+        setIsViewOnly(true);
+        isSubmittedRef.current = true; // For autosave prevention
+      }
+    }
+  }, [draftData]);
 
   useEffect(() => {
     if (currentGlobalIndex == null) return;
@@ -420,7 +451,7 @@ function formatSchemaJSON(overview, answers) {
     try {
       const schema = formatSchemaJSON(formDataRef.current, answersRef.current);
       const payload = {
-        status: "draft",
+        status: "In-progress",
         schema_json: schema,
         overview: formDataRef.current,
         answers: answersRef.current,
@@ -539,7 +570,7 @@ function formatSchemaJSON(overview, answers) {
           id: assessmentId,
           caseId: formData.caseId,
           caseName: formData.caseName,
-          status: "Draft",
+          status: "In-progress",
           createdBy: formData.workerName || "Current User",
           overview: formData,
           answers: answers,
@@ -648,8 +679,8 @@ function formatSchemaJSON(overview, answers) {
   const badgeRowsForPage = activeSection.rows.slice(badgePageStartIndexInSection, badgePageStartIndexInSection + badgesPerPage);
   const sectionStartGlobal = sectionRanges.get(activeSectionId)?.start ?? 0;
   // eslint-disable-next-line no-unused-vars
-  const submitDisabled = !canSubmit || isSaving || isSubmitted;
-  const saveDisabled = !anyAnswered || isSaving || isSubmitted;
+  const submitDisabled = !canSubmit || isSaving || isSubmitted || isViewOnly;
+  const saveDisabled = !anyAnswered || isSaving || isSubmitted || isViewOnly;
 
   // ShouldShowDescribe unchanged
   const shouldShowDescribe = (() => {
@@ -664,7 +695,22 @@ function formatSchemaJSON(overview, answers) {
   return (
     <>
       <div style={styles.container}>
-      <div style={styles.header}>Child and Adolescent Needs and Strengths (CANS)</div>
+      <div style={styles.header}>
+        Child and Adolescent Needs and Strengths (CANS)
+        {isViewOnly && (
+          <span style={{ 
+            marginLeft: 16, 
+            fontSize: 14, 
+            fontWeight: 600, 
+            color: "#636F9E",
+            background: "#f5f5f5",
+            padding: "4px 12px",
+            borderRadius: 4
+          }}>
+            Read-Only Mode
+          </span>
+        )}
+      </div>
 
       <div style={styles.overviewCard}>
         <div style={{ fontSize: 16, fontWeight: 600, color: "#111827", marginBottom: 16 }}>Overview</div>
@@ -728,7 +774,7 @@ function formatSchemaJSON(overview, answers) {
                 onChange={(e) => updateFormField("memberRole", e.target.value)}
                 style={{ ...styles.memberRoleInput, padding: "6px 8px" }}
                 aria-label="Member role"
-                disabled={isSubmitted}
+                disabled={isSubmitted || isViewOnly}
               >
                 <option value="">-- Select role --</option>
                 <option value="Child">Child</option>
@@ -781,7 +827,7 @@ function formatSchemaJSON(overview, answers) {
 
         {/* RIGHT PANEL */}
         <section style={styles.rightCard(styles.pageHeight)}>
-          {isSubmitted ? (
+          {isSubmitted && !isViewOnly ? (
             <SubmitSuccessScreen 
               formData={formData}
               sections={visibleSections}
@@ -901,7 +947,7 @@ function formatSchemaJSON(overview, answers) {
                                 onChange={() => setAnswer(currentRow.id, { score: null, unk: isUnknown, na: !isUnknown })}
                                 style={styles.visibleRadio}
                                 aria-label={raw}
-                                disabled={isSubmitted}
+                                disabled={isSubmitted || isViewOnly}
                               />
                               {/* empty numeric space for alignment */}
                               <div style={styles.optionNumber(false, checked)} />
@@ -924,7 +970,7 @@ function formatSchemaJSON(overview, answers) {
                               }}
                               style={styles.visibleRadio}
                               aria-label={`Option ${idx}: ${raw}`}
-                              disabled={isSubmitted}
+                              disabled={isSubmitted || isViewOnly}
                             />
 
                             {/* plain number label (no box) */}
@@ -950,7 +996,7 @@ function formatSchemaJSON(overview, answers) {
                             placeholder="Explain the description here"
                             value={(answers[currentRow.id] || {}).description || ""}
                             onChange={(e) => setAnswer(currentRow.id, { description: e.target.value })}
-                            disabled={isSubmitted}
+                            disabled={isSubmitted || isViewOnly}
                           />
                         </div>
                       )}

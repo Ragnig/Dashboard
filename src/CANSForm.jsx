@@ -1,6 +1,6 @@
 
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { Checkmark20Filled, Warning20Filled, CheckmarkCircle20Filled, Circle20Regular, ErrorCircle20Filled } from "@fluentui/react-icons";
+import { Checkmark20Filled, Warning20Filled, Warning20Regular, CheckmarkCircle20Filled, Circle20Regular, ErrorCircle20Filled } from "@fluentui/react-icons";
 import { demoSections } from "./demosection";
 import styles from "./formstyle";
 import SubmitSuccessScreen from "./SubmitSuccessScreen";
@@ -753,7 +753,21 @@ function formatSchemaJSON(overview, answers) {
                 key={s.id}
                 type="button"
                 style={styles.leftBtn(active)}
-                onClick={() => { onSelectSection(s.id); setShowWarningScreen(false); }}
+                onClick={() => { 
+                  if (showReviewScreen) {
+                    // Exit review screen and go to selected section
+                    setShowReviewScreen(false);
+                    const r = sectionRanges.get(s.id);
+                    if (r) {
+                      setActiveSectionId(s.id);
+                      setCurrentGlobalIndex(r.start);
+                      setBubblePageIndex(0);
+                    }
+                  } else {
+                    onSelectSection(s.id); 
+                    setShowWarningScreen(false);
+                  }
+                }}
                 title={s.title}
               >
                 <span style={styles.sectionBadge(completed, incomplete)}>
@@ -786,7 +800,7 @@ function formatSchemaJSON(overview, answers) {
           ) : showWarningScreen ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "flex-start", padding: 48, height: "100%", gap: 24 }}>
               <div style={{ width: 64, height: 64, borderRadius: 32, background: "#f59e0b", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-                <Warning20Filled style={{ width: 48, height: 48, color: '#f59e0b' }} />
+                <Warning20Regular style={{ width: 32, height: 32, color: '#fff' }} />
               </div>
               <h2 style={{ fontSize: 24, fontWeight: 400, color: "#111827", margin: 0 }}>
                 {incompleteSections.size} {incompleteSections.size === 1 ? 'section requires' : 'sections require'} your attention...
@@ -812,6 +826,17 @@ function formatSchemaJSON(overview, answers) {
               }} 
               onSubmit={handleComplete}
               isSaving={isSaving}
+              activeSectionId={activeSectionId}
+              onSectionChange={(sectionId) => {
+                // Exit review screen and go to the selected section
+                setShowReviewScreen(false);
+                const r = sectionRanges.get(sectionId);
+                if (r) {
+                  setActiveSectionId(sectionId);
+                  setCurrentGlobalIndex(r.start);
+                  setBubblePageIndex(0);
+                }
+              }}
             />
           ) : (
             <>
@@ -841,13 +866,7 @@ function formatSchemaJSON(overview, answers) {
                         role="button"
                         title={r.title}
                       >
-                        <span style={{ fontWeight: 600, fontSize: 13 }}>{r.id}</span>
-                        {incomplete && (
-                          <ErrorCircle20Filled style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16 }} />
-                        )}
-                        {saved && !incomplete && (
-                          <CheckmarkCircle20Filled style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16 }} />
-                        )}
+                        {r.id}
                       </div>
                       {idx < badgeRowsForPage.length - 1 && <div aria-hidden style={styles.connector} />}
                     </React.Fragment>
@@ -926,7 +945,7 @@ function formatSchemaJSON(overview, answers) {
                           <textarea
                             style={{
                               ...styles.describeArea,
-                              border: missingDescriptions.has(currentRow.id) ? "1px solid #131212ff" : "1px solid #d1d5db",
+                              border: missingDescriptions.has(currentRow.id) ? "1px solid #6b7280" : "1px solid #d1d5db",
                             }}
                             placeholder="Explain the description here"
                             value={(answers[currentRow.id] || {}).description || ""}

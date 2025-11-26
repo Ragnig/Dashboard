@@ -288,15 +288,16 @@ const loadAssessments = async () => {
     const saved = saveAssessment(newAssessment);
     
     if (saved) {
-      // Show appropriate message based on status
-      if (data.status === 'Completed') {
-        alert('✅ CANS assessment submitted successfully!');
-      } else {
-        alert('✅ CANS assessment saved as draft!');
-      }
-      setActiveForm(null);
-      setSelectedDraft(null);
       loadAssessments();
+      // Show appropriate message based on status
+      // For completed status, don't show alert - let the success screen show
+      if (data.status === 'Draft') {
+        alert('✅ CANS assessment saved as draft!');
+        setActiveForm(null);
+        setSelectedDraft(null);
+      }
+      // For completed status, keep form open to show success screen
+      // Success screen will handle closing via onClose
     } else {
       alert('Failed to save assessment. Please try again.');
     }

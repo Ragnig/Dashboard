@@ -25,7 +25,7 @@ const requiredOverviewFields = ["caseId", "caseName", "personId", "memberName", 
 const badgesPerPage = 15;
 
 /* -------------------- COMPONENT -------------------- */
-export default function BasicInfoForm({ overview = demoOverview, sections = demoSections, onClose }) {
+export default function BasicInfoForm({ overview = demoOverview, sections = demoSections, onClose, onSave, draftData }) {
   const d = new Date();
   const pad = (n) => String(n).padStart(2, "0");
   const todayIso = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -529,8 +529,24 @@ function formatSchemaJSON(overview, answers) {
       if (res.data?.id) setServerDocId(res.data.id);
       setIsDirty(false);
       setLastSavedAt(new Date().toISOString());
-      alert("✅ Saved as draft!");
+      
       savedOk = true;
+      
+      // Call onSave callback to update dashboard
+      if (typeof onSave === "function") {
+        const assessmentId = draftData?.id || serverDocId || res.data?.id || `CANS-${Date.now()}`;
+        onSave({
+          id: assessmentId,
+          caseId: formData.caseId,
+          caseName: formData.caseName,
+          status: "Draft",
+          createdBy: formData.workerName || "Current User",
+          overview: formData,
+          answers: answers,
+          data: payload
+        });
+      }
+      
     } catch (err) {
       console.error("Save draft error:", err);
       alert("Error while saving draft: " + (err.message || String(err)));
@@ -601,6 +617,21 @@ function formatSchemaJSON(overview, answers) {
       isSubmittedRef.current = true;
       stopAutosave();
 
+      // Call onSave callback to update dashboard
+      if (typeof onSave === "function") {
+        const assessmentId = draftData?.id || serverDocId || res.data?.id || `CANS-${Date.now()}`;
+        onSave({
+          id: assessmentId,
+          caseId: formData.caseId,
+          caseName: formData.caseName,
+          status: "Completed",
+          createdBy: formData.workerName || "Current User",
+          overview: formData,
+          answers: answers,
+          data: payload
+        });
+      }
+      
       // Show success screen instead of alert
       // alert("Form is submitted Successfully");
     } catch (err) {
@@ -923,7 +954,7 @@ function formatSchemaJSON(overview, answers) {
                 disabled={saveDisabled}
                 aria-disabled={saveDisabled}
               >
-                {isSaving ? "Saving..." : isAutosaving ? "Autosaving..." : "Save as Draft & Close"}
+                {isSaving ? "Saving..." : isAutosaving ? "Autosaving..." : "Save as Draft & Close Form"}
               </button>
             </div>
 

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { Checkmark20Filled, Warning20Filled } from "@fluentui/react-icons";
+import { Checkmark20Filled, Warning20Filled, CheckmarkCircle20Filled, Circle20Regular, ErrorCircle20Filled } from "@fluentui/react-icons";
 import { demoSections } from "./demosection";
 import styles from "./formstyle";
 import SubmitSuccessScreen from "./SubmitSuccessScreen";
@@ -810,7 +810,13 @@ function formatSchemaJSON(overview, answers) {
                         role="button"
                         title={r.title}
                       >
-                        {r.id}
+                        {incomplete ? (
+                          <ErrorCircle20Filled style={{ width: 20, height: 20 }} />
+                        ) : saved ? (
+                          <CheckmarkCircle20Filled style={{ width: 20, height: 20 }} />
+                        ) : (
+                          <Circle20Regular style={{ width: 20, height: 20 }} />
+                        )}
                       </div>
                       {idx < badgeRowsForPage.length - 1 && <div aria-hidden style={styles.connector} />}
                     </React.Fragment>

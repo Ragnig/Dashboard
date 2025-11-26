@@ -35,7 +35,7 @@ const ReviewScreen = ({ onBack, onSubmit, isSaving, sections, answers, overview 
     },
     header: {
       padding: "32px 48px",
-      borderBottom: "1px solid #E5E7EB",
+      borderBottom: "1px solid #d1d1d1",
       background: "#fff",
     },
     title: {
@@ -54,14 +54,15 @@ const ReviewScreen = ({ onBack, onSubmit, isSaving, sections, answers, overview 
       flex: 1,
       overflowY: "auto",
       padding: "24px 48px",
-      background: "#F9FAFB",
+      background: "#f5f5f5",
     },
     overviewSection: {
       background: "#fff",
-      borderRadius: 8,
+      borderRadius: 4,
       padding: 24,
       marginBottom: 24,
-      border: "1px solid #E5E7EB",
+      border: "1px solid #d1d1d1",
+      boxShadow: "0 1px 6px rgba(16,24,40,0.06)",
     },
     overviewTitle: {
       fontSize: 16,
@@ -81,7 +82,7 @@ const ReviewScreen = ({ onBack, onSubmit, isSaving, sections, answers, overview 
     },
     overviewLabel: {
       fontSize: 12,
-      color: "#6B7280",
+      color: "#6b7280",
       fontWeight: 500,
     },
     overviewValue: {
@@ -90,9 +91,10 @@ const ReviewScreen = ({ onBack, onSubmit, isSaving, sections, answers, overview 
     },
     sectionCard: {
       background: "#fff",
-      borderRadius: 8,
+      borderRadius: 4,
       marginBottom: 16,
-      border: "1px solid #E5E7EB",
+      border: "1px solid #d1d1d1",
+      boxShadow: "0 1px 6px rgba(16,24,40,0.06)",
       overflow: "hidden",
     },
     sectionHeader: {
@@ -102,11 +104,11 @@ const ReviewScreen = ({ onBack, onSubmit, isSaving, sections, answers, overview 
       justifyContent: "space-between",
       alignItems: "center",
       background: "#fff",
-      borderBottom: "1px solid #E5E7EB",
+      borderBottom: "1px solid #d1d1d1",
       transition: "background 0.2s",
     },
     sectionHeaderHover: {
-      background: "#F9FAFB",
+      background: "#f5f5f5",
     },
     sectionTitle: {
       fontSize: 16,
@@ -116,14 +118,14 @@ const ReviewScreen = ({ onBack, onSubmit, isSaving, sections, answers, overview 
     },
     sectionStats: {
       fontSize: 13,
-      color: "#6B7280",
+      color: "#616161",
       display: "flex",
       alignItems: "center",
       gap: 16,
     },
     chevron: {
       fontSize: 20,
-      color: "#9CA3AF",
+      color: "#9ca3af",
       transition: "transform 0.2s",
     },
     chevronExpanded: {
@@ -170,7 +172,7 @@ const ReviewScreen = ({ onBack, onSubmit, isSaving, sections, answers, overview 
     },
     footer: {
       padding: "20px 48px",
-      borderTop: "1px solid #E5E7EB",
+      borderTop: "1px solid #d1d1d1",
       background: "#fff",
     },
     buttonGroup: {
@@ -180,8 +182,8 @@ const ReviewScreen = ({ onBack, onSubmit, isSaving, sections, answers, overview 
     },
     buttonSecondary: {
       padding: "10px 24px",
-      borderRadius: 4,
-      border: "1px solid #D1D1D1",
+      borderRadius: 8,
+      border: "1px solid #d1d5db",
       background: "#fff",
       color: "#111827",
       fontSize: 14,
@@ -191,8 +193,8 @@ const ReviewScreen = ({ onBack, onSubmit, isSaving, sections, answers, overview 
     },
     buttonPrimary: {
       padding: "10px 24px",
-      borderRadius: 4,
-      border: "none",
+      borderRadius: 8,
+      border: "1px solid #636F9E",
       background: "#636F9E",
       color: "#fff",
       fontSize: 14,
@@ -205,15 +207,15 @@ const ReviewScreen = ({ onBack, onSubmit, isSaving, sections, answers, overview 
   const getScoreBadgeStyle = (score) => {
     const baseStyle = { ...styles.scoreBadge };
     if (score === 0) {
-      return { ...baseStyle, background: "#DEF7EC", color: "#03543F" };
+      return { ...baseStyle, background: "#dcfce7", color: "#166534" };
     } else if (score === 1) {
-      return { ...baseStyle, background: "#FEF3C7", color: "#92400E" };
+      return { ...baseStyle, background: "#fef3c7", color: "#92400e" };
     } else if (score === 2) {
-      return { ...baseStyle, background: "#FED7AA", color: "#9A3412" };
+      return { ...baseStyle, background: "#fed7aa", color: "#9a3412" };
     } else if (score === 3) {
-      return { ...baseStyle, background: "#FEE2E2", color: "#991B1B" };
+      return { ...baseStyle, background: "#fee2e2", color: "#991b1b" };
     }
-    return { ...baseStyle, background: "#E5E7EB", color: "#374151" };
+    return { ...baseStyle, background: "#e5e7eb", color: "#374151" };
   };
 
   const getSectionStats = (section) => {
@@ -299,7 +301,7 @@ const ReviewScreen = ({ onBack, onSubmit, isSaving, sections, answers, overview 
               <div
                 style={styles.sectionHeader}
                 onClick={() => toggleSection(section.id)}
-                onMouseEnter={(e) => e.currentTarget.style.background = "#F9FAFB"}
+                onMouseEnter={(e) => e.currentTarget.style.background = "#f5f5f5"}
                 onMouseLeave={(e) => e.currentTarget.style.background = "#fff"}
               >
                 <div>

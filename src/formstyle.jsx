@@ -196,16 +196,16 @@ const styles = {
       justifyContent: "center",
       border: "1px solid #e5e7eb",
       cursor: "pointer",
-      fontWeight: 700,
       flex: "0 0 auto",
       fontSize: 12,
       boxSizing: "border-box",
       margin: 0,
+      transition: "all 0.2s ease",
     };
-    if (active) return { ...base, background: "#636f9e", color: "#fff", borderColor: "#636f9e" };
+    if (active) return { ...base, background: "#636f9e", color: "#fff", borderColor: "#636f9e", boxShadow: "0 2px 4px rgba(99,111,158,0.3)" };
     if (incomplete) return { ...base, background: "#fee2e2", color: "#991b1b", borderColor: "#fca5a5" };
-    if (saved) return { ...base, background: "#dcfce7", color: "#166534", borderColor: "#dcfce7" };
-    return { ...base, background: "#fff", color: "#374151", borderColor: "#e5e7eb" };
+    if (saved) return { ...base, background: "#dcfce7", color: "#166534", borderColor: "#86efac" };
+    return { ...base, background: "#fff", color: "#9ca3af", borderColor: "#e5e7eb" };
   },
 
   connector: {
@@ -214,7 +214,7 @@ const styles = {
     height: 2,
     background: "#e5e7eb",
     alignSelf: "center",
-    borderRadius: 2,
+    borderRadius: 1,
     margin: 0,
     boxSizing: "border-box",
   },

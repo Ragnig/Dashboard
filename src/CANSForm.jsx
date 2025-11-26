@@ -757,7 +757,7 @@ function formatSchemaJSON(overview, answers) {
                 title={s.title}
               >
                 <span style={styles.sectionBadge(completed, incomplete)}>
-                  {completed ? <Checkmark20Filled /> : incomplete ? <Warning20Filled /> : ""}
+                  {completed ? <Checkmark20Filled style={{ width: 16, height: 16 }} /> : incomplete ? <Warning20Filled style={{ width: 16, height: 16 }} /> : ""}
                 </span>
                 <span style={styles.leftBtnText}>{s.title}</span>
               </button>
@@ -786,7 +786,7 @@ function formatSchemaJSON(overview, answers) {
           ) : showWarningScreen ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "flex-start", padding: 48, height: "100%", gap: 24 }}>
               <div style={{ width: 64, height: 64, borderRadius: 32, background: "#f59e0b", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-                <Warning20Filled style={{ width: 32, height: 32 }} />
+                <Warning20Filled style={{ width: 48, height: 48, color: '#f59e0b' }} />
               </div>
               <h2 style={{ fontSize: 24, fontWeight: 400, color: "#111827", margin: 0 }}>
                 {incompleteSections.size} {incompleteSections.size === 1 ? 'section requires' : 'sections require'} your attention...
@@ -841,12 +841,12 @@ function formatSchemaJSON(overview, answers) {
                         role="button"
                         title={r.title}
                       >
-                        {incomplete ? (
-                          <ErrorCircle20Filled style={{ width: 20, height: 20 }} />
-                        ) : saved ? (
-                          <CheckmarkCircle20Filled style={{ width: 20, height: 20 }} />
-                        ) : (
-                          <Circle20Regular style={{ width: 20, height: 20 }} />
+                        <span style={{ fontWeight: 600, fontSize: 13 }}>{r.id}</span>
+                        {incomplete && (
+                          <ErrorCircle20Filled style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16 }} />
+                        )}
+                        {saved && !incomplete && (
+                          <CheckmarkCircle20Filled style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16 }} />
                         )}
                       </div>
                       {idx < badgeRowsForPage.length - 1 && <div aria-hidden style={styles.connector} />}

@@ -190,22 +190,24 @@ const styles = {
       width: 32,
       height: 32,
       minWidth: 32,
-      borderRadius: 16,
+      borderRadius: 6,
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
-      border: "1px solid #e5e7eb",
+      border: "1.5px solid",
       cursor: "pointer",
       flex: "0 0 auto",
-      fontSize: 12,
+      fontSize: 13,
       boxSizing: "border-box",
       margin: 0,
       transition: "all 0.2s ease",
+      position: "relative",
+      fontFamily: "Segoe UI",
     };
-    if (active) return { ...base, background: "#636f9e", color: "#fff", borderColor: "#636f9e", boxShadow: "0 2px 4px rgba(99,111,158,0.3)" };
-    if (incomplete) return { ...base, background: "#fee2e2", color: "#991b1b", borderColor: "#fca5a5" };
-    if (saved) return { ...base, background: "#dcfce7", color: "#166534", borderColor: "#86efac" };
-    return { ...base, background: "#fff", color: "#9ca3af", borderColor: "#e5e7eb" };
+    if (active) return { ...base, background: "#636f9e", color: "#fff", borderColor: "#636f9e", boxShadow: "0 2px 6px rgba(99,111,158,0.25)", fontWeight: 600 };
+    if (incomplete) return { ...base, background: "#fff", color: "#991b1b", borderColor: "#fca5a5", fontWeight: 500 };
+    if (saved) return { ...base, background: "#fff", color: "#166534", borderColor: "#86efac", fontWeight: 500 };
+    return { ...base, background: "#fff", color: "#6b7280", borderColor: "#d1d5db", fontWeight: 500 };
   },
 
   connector: {

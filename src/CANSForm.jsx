@@ -766,6 +766,9 @@ function formatSchemaJSON(overview, answers) {
             </div>
           ) : showReviewScreen ? (
             <ReviewScreen 
+              sections={visibleSections}
+              answers={answers}
+              overview={formData}
               onBack={() => {
                 setShowReviewScreen(false);
                 // Go to first section, first question

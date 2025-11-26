@@ -796,6 +796,7 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
   const [showMissedQuestionsModal, setShowMissedQuestionsModal] = useState(false);
   const [missedQuestions, setMissedQuestions] = useState([]);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   useEffect(() => {
     console.log('=== FARE DRAFT DEBUG ===');
@@ -1264,7 +1265,6 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
         potentialViolations: getPotentialViolations()
       };
 
-      alert('Draft saved successfully! You can continue editing later.');
       setUnsavedChanges(false);
       
       if (onSave) {
@@ -1285,6 +1285,9 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
           savedAt: new Date().toISOString()
         });
       }
+      
+      // Success message will be shown by the dashboard component
+      alert('Draft saved successfully!');
       
       window.scrollTo(0, 0);
       window.location.reload();
@@ -1343,6 +1346,13 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
       return;
     }
     
+    // Show confirmation dialog before submitting
+    setShowSubmitConfirm(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    setShowSubmitConfirm(false);
+    
     const endInterviewInfo = checkForEndInterviewOptions();
     
     if (endInterviewInfo && !interviewEnded) {
@@ -1382,11 +1392,6 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
         potentialViolations: getPotentialViolations()
       };
       
-      alert(
-        `Assessment finalized successfully!\n` +
-        `Status: ${saveData.status}\n` +
-        `${saveData.status === 'ended' ? `Reason: ${saveData.endedReason}` : ''}`
-      );
       setUnsavedChanges(false);
       
       if (onSave) {
@@ -1407,6 +1412,9 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
           savedAt: new Date().toISOString()
         });
       }
+      
+      // Success message will be shown by the dashboard component
+      //alert('Assessment finalized successfully!');
       
       if (endInterviewInfo) {
         setInterviewEnded(true);
@@ -2373,6 +2381,132 @@ export default function FAREQuestionnaire({ onSave, draftData }) {
               <p className="modal-note-center">
                 💡 Click any question above to jump directly to it
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Submit Confirmation Dialog */}
+        {showSubmitConfirm && (
+          <div className="modal-overlay" onClick={() => setShowSubmitConfirm(false)}>
+            <div className="modal-content" style={{ maxWidth: '500px' }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px', 
+                marginBottom: '16px',
+                paddingBottom: '16px',
+                borderBottom: '1px solid #E5E7EB'
+              }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  backgroundColor: '#DBEAFE',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 style={{ 
+                    fontSize: '18px', 
+                    fontWeight: '700', 
+                    color: '#111827',
+                    margin: 0,
+                    marginBottom: '4px'
+                  }}>
+                    Confirm Submission
+                  </h3>
+                  <p style={{ 
+                    fontSize: '14px', 
+                    color: '#6B7280',
+                    margin: 0
+                  }}>
+                    Review before finalizing
+                  </p>
+                </div>
+              </div>
+              
+              <div style={{ marginBottom: '24px' }}>
+                <p style={{ 
+                  fontSize: '14px', 
+                  color: '#374151', 
+                  lineHeight: '1.6',
+                  margin: 0,
+                  marginBottom: '16px'
+                }}>
+                  Are you sure you want to submit this FARE assessment? This action will finalize the assessment and it cannot be edited afterward.
+                </p>
+                
+                <div style={{
+                  backgroundColor: '#FEF3C7',
+                  border: '1px solid #FCD34D',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  display: 'flex',
+                  gap: '8px'
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0, marginTop: '2px' }}>
+                    <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM11 15H9V13H11V15ZM11 11H9V5H11V11Z" fill="#F59E0B"/>
+                  </svg>
+                  <div style={{ fontSize: '13px', color: '#92400E', lineHeight: '1.5' }}>
+                    <strong>Important:</strong> Once submitted, this assessment will be marked as completed and become read-only. Make sure all information is accurate.
+                  </div>
+                </div>
+              </div>
+              
+              <div style={{ 
+                display: 'flex', 
+                gap: '12px',
+                justifyContent: 'flex-end'
+              }}>
+                <button 
+                  className="btn btn-modal-secondary"
+                  onClick={() => setShowSubmitConfirm(false)}
+                  disabled={isSaving}
+                  style={{ minWidth: '120px' }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="btn btn-modal-primary"
+                  onClick={handleConfirmSubmit}
+                  disabled={isSaving}
+                  style={{ 
+                    minWidth: '120px',
+                    backgroundColor: '#2563EB',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  {isSaving ? (
+                    <>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid #ffffff',
+                        borderTopColor: 'transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 0.6s linear infinite'
+                      }}></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 4L6 11L3 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Yes, Submit
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}
